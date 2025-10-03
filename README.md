@@ -1,12 +1,6 @@
-# sbom-merkle (modular)
+# sbom-merkle
 
-## Usage (in place)
+## Usage 
 ```
-python -m sbom_merkle.cli build --in alpine.json --out bundle.json --stable-hash purl
-```
-
-## Install editable
-```
-pip install -e /path/to/sbommerkle_pkg
-sbom-merkle build --in alpine.json --out bundle.json --stable-hash purl
+python -m sbom_merkle.main build --in alpine.json --out alpine_bundle.json --stable-hash purl
 ```
