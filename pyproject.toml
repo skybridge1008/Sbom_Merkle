@@ -1,0 +1,9 @@
+[project]
+name = "sbom-merkle"
+version = "0.2.0"
+description = "SBOM Merkle bundle with node-level encryption, stable-hash(purl), and concatenation update"
+requires-python = ">=3.8"
+dependencies = []
+
+[project.scripts]
+sbom-merkle = "sbom_merkle.cli:main"
