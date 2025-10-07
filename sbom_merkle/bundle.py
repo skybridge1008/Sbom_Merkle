@@ -30,7 +30,7 @@ def build_bundle(sbom: Dict[str, Any],
                  prev_root_hex: Optional[str] = None,
                  sign_sk_hex: Optional[str] = None,
                  encrypt_node: bool = False,
-                 stable_hash_field: Optional[str] = None) -> MerkleBundle:
+                 stable_hash_field: Optional[str] = "purl") -> MerkleBundle:
     key = bytes.fromhex(aead_key_hex) if aead_key_hex else None
 
     sbom_clone = json.loads(canonical_json(sbom))
@@ -44,49 +44,51 @@ def build_bundle(sbom: Dict[str, Any],
         # Build hashview (stable preimage) if requested
         hashview = None
         if stable_hash_field:
-            def _get(obj, path):
-                parts = path.split('.')
-                cur = obj
-                for pp in parts:
-                    if isinstance(cur, dict) and pp in cur:
-                        cur = cur[pp]
-                    else:
-                        return None
-                return cur
-            hv_val = _get(rec, stable_hash_field)
-            if hv_val is None:
-                hv_val = rec.get("purl") or rec.get("bom-ref") or rec.get("name")
-            hv_bytes = canonical_json(hv_val).encode('utf-8')
-            import hashlib
-            hashview = {"stable_field": stable_hash_field, "value_sha256": hashlib.sha256(hv_bytes).hexdigest()}
+            # 후보 필드 우선순위: 사용자가 지정한 것 -> purl -> bom-ref -> name (중복 제거)
+            preferred = ["purl", "bom-ref", "name"]
+            seen = set()
+            candidates = [f for f in preferred if not (f in seen or seen.add(f))]
 
+            # 실제로 사용할 필드와 값 고르기
+            hv_field_used = None
+            hv_val = None
+            for fld in candidates:
+                val = rec.get(fld)
+                if val is not None:
+                    hv_field_used = fld
+                    hv_val = val
+                    break
+            hv_bytes = str(hv_val).encode('utf-8')
+            import hashlib
+            hashview = {
+                "hash_source": hv_field_used, 
+                "sha256": hashlib.sha256(hv_bytes).hexdigest()
+            }
+            # print(hv_bytes)
+            # print(hashview) # for check hash source
         # Node-level encryption
-        if encrypt_node and key:
-            ref = rec.get("bom-ref", f"component[{idx}]")
-            if stable_hash_field:
-                rec = {
-                    "bom-ref": ref,
-                    "__node_redacted": {
-                        "v": 1,
-                        "reason": "confidential",
-                        "stable": hashview
-                    }
-                }
+        if encrypt_node:
+            if key is None:
+                raise ValueError("encryption requested but no --key-hex provided")
+
+            ref = str(rec.get("bom-ref", f"component[{idx}]"))
+
+            # 항상 '암호문'으로 저장 (redacted 사용 안 함)
+            payload = json.loads(canonical_json(rec))
+            if isinstance(payload, dict) and "bom-ref" in payload:
+                payload_no_ref = {k: v for k, v in payload.items() if k != "bom-ref"}
             else:
-                payload = json.loads(canonical_json(rec))
-                if isinstance(payload, dict) and "bom-ref" in payload:
-                    payload_no_ref = {k:v for k,v in payload.items() if k != "bom-ref"}
-                else:
-                    payload_no_ref = payload
-                enc = encrypt_value(payload_no_ref, key, aad=f"node:{ref}")
-                rec = {"bom-ref": ref, "__node_enc": enc}
+                payload_no_ref = payload
+
+            enc = encrypt_value(payload_no_ref, key, aad=f"node:{ref}")
+            rec = {"bom-ref": ref, "__node_enc": enc}
+
         else:
-            # Per-field redaction
+            # 필드 단위 가림/암호화(노드 단위 암호화가 아닐 때만 적용)
             for path in redact_paths:
                 ok, parent, value, last = get_by_path(rec, path)
                 if ok:
                     set_by_path(rec, path, redact_value(value))
-            # Per-field encryption
             if key:
                 for path in encrypt_paths:
                     ok, parent, value, last = get_by_path(rec, path)

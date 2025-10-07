@@ -16,7 +16,6 @@ def cmd_build(a):
         prev_root_hex=a.prev_root,
         sign_sk_hex=a.sign_root,
         encrypt_node=bool(a.encrypt_node),
-        stable_hash_field=a.stable_hash,
     )
     outj = {
         "root": bundle.root,
@@ -170,7 +169,6 @@ def build_argparser():
     b.add_argument("--redact", nargs="*", default=[], help="Per-field redaction (dot paths); ignored if --encrypt-node")
     b.add_argument("--prev-root", help="Previous bundle root hex (version chaining metadata)")
     b.add_argument("--sign-root", help="Ed25519 secret key hex to sign root (optional)")
-    b.add_argument("--stable-hash", dest="stable_hash", help="Use only this field's SHA256 (e.g., purl) for leaf hashes")
 
     pr = sub.add_parser("prove", help="Generate Merkle proof for a bom-ref")
     pr.add_argument("--bundle", required=True, help="Bundle JSON from build/update step")
@@ -193,7 +191,6 @@ def build_argparser():
     up.add_argument("--encrypt", nargs="*", default=[], help="Per-field encryption (ignored if --encrypt-node)")
     up.add_argument("--redact", nargs="*", default=[], help="Per-field redaction (ignored if --encrypt-node)")
     up.add_argument("--sign-root", help="Ed25519 secret key hex to sign NEW root (optional)")
-    up.add_argument("--stable-hash", dest="stable_hash", help="Use only this field's SHA256 (e.g., purl) for leaf hashes")
 
     return p
 
