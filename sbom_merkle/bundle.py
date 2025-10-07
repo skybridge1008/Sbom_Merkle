@@ -64,8 +64,9 @@ def build_bundle(sbom: Dict[str, Any],
                 "hash_source": hv_field_used, 
                 "sha256": hashlib.sha256(hv_bytes).hexdigest()
             }
-            # print(hv_bytes)
-            # print(hashview) # for check hash source
+            #print(hv_bytes)
+            #print(hashview) # for check hash source
+            
         # Node-level encryption
         if encrypt_node:
             if key is None:
@@ -73,7 +74,6 @@ def build_bundle(sbom: Dict[str, Any],
 
             ref = str(rec.get("bom-ref", f"component[{idx}]"))
 
-            # 항상 '암호문'으로 저장 (redacted 사용 안 함)
             payload = json.loads(canonical_json(rec))
             if isinstance(payload, dict) and "bom-ref" in payload:
                 payload_no_ref = {k: v for k, v in payload.items() if k != "bom-ref"}
