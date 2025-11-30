@@ -8,7 +8,6 @@
 이 레포지토리는 **머클 트리(Merkle Tree) 해시 체이닝**을 활용하여  
 소프트웨어 자재 명세서(**SBOM, Software Bill of Materials**)의
 
-- **무결성(Integrity)**
 - **추적 가능성(Traceability)**
 - **기밀성(Confidentiality)**
 
