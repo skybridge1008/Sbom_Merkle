@@ -1,5 +1,5 @@
 # Merkle-Tree 기반 SBOM 추적 가능성 및 기밀성 검증 프레임워크  
-**Repository:** 머클트리와 해시 체이닝 기반 SBOM 확장 모델_무결성, 추적성 및 선택적 기밀성 보장을 위한 접근
+**Repository:**  Merkle-Tree 기반 SBOM 추적 가능성 및 기밀성 검증 프레임워크  
 
 ---
 
